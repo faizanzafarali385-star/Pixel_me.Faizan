@@ -52,20 +52,38 @@ export const Footer: React.FC<FooterProps> = ({ onOpenInquiry }) => {
     <footer id="contact" className="w-full bg-[#101820] text-[#EAF2F6] pt-24 pb-12 px-6 md:px-12 border-t border-white/10 select-none">
       <div className="max-w-[1600px] mx-auto space-y-20">
         {/* Main Connect Callout */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 pb-16 border-b border-white/10">
+        <div
+          data-scroll="line-draw"
+          className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 pb-16 border-b border-white/10"
+        >
           <div className="space-y-4 max-w-2xl">
-            <span className="text-xs font-semibold tracking-widest uppercase text-[#75C5DE] block">
+            <span
+              data-scroll="slide-reveal"
+              className="text-xs font-semibold tracking-widest uppercase text-[#75C5DE] block"
+            >
               Contact &amp; Collaboration
             </span>
-            <h2 className="text-4xl md:text-7xl font-semibold tracking-tight text-white leading-tight">
+            <h2
+              data-scroll="fade-up"
+              data-delay="100"
+              className="text-4xl md:text-7xl font-semibold tracking-tight text-white leading-tight"
+            >
               Let&apos;s Build Something Meaningful.
             </h2>
-            <p className="text-sm md:text-base text-[#647786] leading-relaxed max-w-xl font-normal">
+            <p
+              data-scroll="fade-up"
+              data-delay="200"
+              className="text-sm md:text-base text-[#647786] leading-relaxed max-w-xl font-normal"
+            >
               Have an interesting idea, a project to collaborate on, or an opportunity to create something impactful? I&apos;m always interested in connecting with people who enjoy technology, creativity, and solving real-world problems.
             </p>
           </div>
 
-          <div className="space-y-4 shrink-0">
+          <div
+            data-scroll="fade-left"
+            data-delay="250"
+            className="space-y-4 shrink-0"
+          >
             <div className="flex items-center gap-3">
               <a
                 href={`mailto:${PERSONAL_INFO.email}`}
@@ -91,7 +109,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenInquiry }) => {
             <div className="pt-2">
               <button
                 onClick={onOpenInquiry}
-                className="px-6 py-3 rounded-full bg-[#C6283D] hover:bg-[#b02235] text-white font-medium text-xs md:text-sm transition-colors shadow-lg cursor-pointer"
+                className="px-6 py-3 rounded-full bg-[#C6283D] hover:bg-[#b02235] text-white font-medium text-xs md:text-sm transition-colors shadow-lg cursor-pointer hover:shadow-[0_0_20px_rgba(198,40,61,0.5)] transition-shadow"
               >
                 Open Project Inquiry &amp; Connect
               </button>
@@ -100,7 +118,11 @@ export const Footer: React.FC<FooterProps> = ({ onOpenInquiry }) => {
         </div>
 
         {/* Local Time, Location & Social Presence */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-4 text-xs md:text-sm text-[#647786]">
+        <div
+          data-scroll="fade-up"
+          data-delay="100"
+          className="grid grid-cols-1 md:grid-cols-3 gap-8 py-4 text-xs md:text-sm text-[#647786]"
+        >
           <div className="space-y-2">
             <div className="text-white font-medium flex items-center gap-2">
               <MapPin className="w-3.5 h-3.5 text-[#C6283D]" />
@@ -149,19 +171,23 @@ export const Footer: React.FC<FooterProps> = ({ onOpenInquiry }) => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-[#647786]">
+        <div
+          data-scroll="fade-up"
+          data-delay="200"
+          className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-[#647786]"
+        >
           <div>
             © {new Date().getFullYear()} {PERSONAL_INFO.name}. Built with React, TypeScript &amp; Three.js.
           </div>
 
           <button
             onClick={scrollToTop}
-            className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer group"
             aria-label="Back to top"
           >
-            <span>Back to top</span>
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-              <ArrowUp className="w-4 h-4 text-white" />
+            <span className="group-hover:text-[#75C5DE] transition-colors">Back to top</span>
+            <div className="w-8 h-8 rounded-full bg-white/10 group-hover:bg-[#75C5DE]/20 group-hover:text-[#75C5DE] flex items-center justify-center transition-all">
+              <ArrowUp className="w-4 h-4 text-white group-hover:text-[#75C5DE] transition-colors" />
             </div>
           </button>
         </div>

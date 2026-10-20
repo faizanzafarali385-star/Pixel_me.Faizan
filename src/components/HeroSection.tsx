@@ -1,11 +1,15 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { ArrowUpRight, Sparkles, SlidersHorizontal, RotateCcw, Eye, Award, Terminal } from 'lucide-react';
+import { ArrowUpRight, Sparkles, SlidersHorizontal, RotateCcw, Eye, Award, Terminal, X, BadgeCheck } from 'lucide-react';
 import { PERSONAL_INFO } from '../data/portfolioData';
+import Lanyard from './Lanyard';
 
 interface HeroSectionProps {
   onStartProject: () => void;
   onReplayIntro: () => void;
   onExploreWork: () => void;
+  isLanyardOpen?: boolean;
+  onToggleLanyard?: () => void;
+  onCloseLanyard?: () => void;
 }
 
 type RevealMode = 'spotlight' | 'split' | 'vibrant' | 'base';
@@ -13,7 +17,10 @@ type RevealMode = 'spotlight' | 'split' | 'vibrant' | 'base';
 export const HeroSection: React.FC<HeroSectionProps> = ({
   onStartProject,
   onReplayIntro,
-  onExploreWork
+  onExploreWork,
+  isLanyardOpen = false,
+  onToggleLanyard,
+  onCloseLanyard
 }) => {
   const headlineWords = PERSONAL_INFO.primaryTagline.split(' ');
 
@@ -200,15 +207,95 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         }}
       />
 
+      {/* 3.5. INTERACTIVE 3D LANYARD BADGE (Activated by clicking Profile Logo) */}
+      {isLanyardOpen && (
+        <div className="absolute inset-0 z-20 pointer-events-auto overflow-hidden animate-in fade-in duration-500">
+          {/* Close backdrop — click anywhere outside the card */}
+          <div
+            className="absolute inset-0 cursor-pointer"
+            onClick={onCloseLanyard}
+            title="Click to close badge"
+          />
+
+          {/* Status pill + close button — always on top */}
+          <div className="absolute top-24 md:top-28 left-0 right-0 flex items-center justify-between px-4 md:px-10 z-30 pointer-events-auto">
+            <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#101820]/90 border border-[#75C5DE]/30 backdrop-blur-xl shadow-2xl text-xs text-[#EAF2F6]">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#75C5DE] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#75C5DE]"></span>
+              </span>
+              <span className="font-semibold text-white tracking-wide">3D Interactive ID Badge</span>
+              <span className="text-[#647786]">·</span>
+              <span className="text-[#75C5DE] hidden sm:inline text-[11px]">Drag &amp; Toss · Click to Flip</span>
+            </div>
+
+            <button
+              onClick={onCloseLanyard}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#101820]/90 hover:bg-[#C6283D] text-[#EAF2F6] text-xs font-medium border border-white/10 hover:border-[#C6283D] transition-all shadow-xl backdrop-blur-xl cursor-pointer group"
+              aria-label="Close 3D Badge"
+            >
+              <span>Close</span>
+              <X className="w-3.5 h-3.5 text-white/70 group-hover:text-white transition-colors" />
+            </button>
+          </div>
+
+          {/* Full-page Lanyard canvas */}
+          <div style={{ width: '100%', height: '100%' }} className="pointer-events-auto">
+            <Lanyard
+              frontImage="/lanyard-card-front.png"
+              backImage="/lanyard-card-back.png"
+              strapImage="/lanyard-strap.png"
+              imageFit="contain"
+              cardColor="#000000"
+              finish="metallic"
+              anchor="right"
+              strapColor="#116194"
+              metal="gold"
+              size={0.61}
+              strapLength={0.48}
+              strapWidth={0.7}
+              gravity={0.9}
+              damping={0.45}
+              elasticity={0.6}
+              breeze={0.35}
+              interactive={true}
+              intro={true}
+            />
+          </div>
+
+          {/* Bottom hint */}
+          <div className="absolute bottom-8 left-0 right-0 flex items-center justify-center z-30 pointer-events-none">
+            <p className="text-[11px] text-[#75C5DE]/90 bg-[#101820]/80 px-3 py-1 rounded-full border border-white/5 backdrop-blur-sm shadow-md">
+              Tip: Grab, swing, or fling the card • Click the card to flip between front &amp; back
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* 4. FOREGROUND CONTENT */}
       <div className="relative z-10 flex flex-col justify-start md:justify-between w-full max-w-[1600px] mx-auto min-h-screen px-6 md:px-12 pt-28 md:pt-36 pb-12 pointer-events-none">
         <div className="flex flex-col items-start gap-6 max-w-xl pointer-events-auto">
-          {/* Identity Tag */}
-          <div className="flex items-center gap-2.5 text-xs text-[#75C5DE] font-semibold tracking-wider uppercase bg-[#101820]/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 shadow-sm">
-            <Terminal className="w-3.5 h-3.5 text-[#C6283D]" />
-            <span>{PERSONAL_INFO.name}</span>
-            <span className="text-[#647786]">·</span>
-            <span className="text-[#EAF2F6]">SGSU Bhopal</span>
+          {/* Identity Tag & 3D Badge Toggle */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-2.5 text-xs text-[#75C5DE] font-semibold tracking-wider uppercase bg-[#101820]/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 shadow-sm">
+              <Terminal className="w-3.5 h-3.5 text-[#C6283D]" />
+              <span>{PERSONAL_INFO.name}</span>
+              <span className="text-[#647786]">·</span>
+              <span className="text-[#EAF2F6]">SGSU Bhopal</span>
+            </div>
+
+            <button
+              onClick={onToggleLanyard}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer shadow-sm border ${
+                isLanyardOpen
+                  ? 'bg-[#75C5DE] text-[#101820] border-[#75C5DE] font-semibold'
+                  : 'bg-[#75C5DE]/10 hover:bg-[#75C5DE]/20 text-[#75C5DE] border-[#75C5DE]/30'
+              }`}
+              title="Toggle 3D ID Badge"
+            >
+              <Sparkles className="w-3 h-3" />
+              <span>{isLanyardOpen ? 'Hide 3D Badge' : 'View 3D ID Badge'}</span>
+            </button>
           </div>
 
           {/* Headline with word-by-word reveal */}

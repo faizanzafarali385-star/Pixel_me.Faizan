@@ -7,22 +7,40 @@ export const AchievementsSection: React.FC = () => {
     <section id="achievements" className="w-full bg-[#101820] py-24 px-6 md:px-12 text-[#EAF2F6] border-t border-white/10">
       <div className="max-w-[1600px] mx-auto space-y-16">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-white/10">
+        <div
+          data-scroll="line-draw"
+          className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-white/10"
+        >
           <div>
-            <span className="text-xs font-semibold tracking-widest uppercase text-[#75C5DE] block mb-2">
+            <span
+              data-scroll="slide-reveal"
+              className="text-xs font-semibold tracking-widest uppercase text-[#75C5DE] block mb-2"
+            >
               04 · Competitive Excellence
             </span>
-            <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-white">
+            <h2
+              data-scroll="fade-up"
+              data-delay="100"
+              className="text-3xl md:text-5xl font-semibold tracking-tight text-white"
+            >
               Achievements &amp; Hackathons
             </h2>
           </div>
-          <p className="text-xs md:text-sm text-[#647786] max-w-md">
+          <p
+            data-scroll="fade-right"
+            data-delay="200"
+            className="text-xs md:text-sm text-[#647786] max-w-md"
+          >
             Validated in high-intensity competitive hackathons and rapid technical prototyping sprints.
           </p>
         </div>
 
         {/* Highlight Card: First Prize BGI Viksit Bharat 2047 */}
-        <div className="p-8 md:p-12 rounded-3xl bg-gradient-to-br from-[#101820] via-white/[0.04] to-white/[0.01] border border-[#C6283D]/40 shadow-2xl relative overflow-hidden">
+        <div
+          data-scroll="scale-in"
+          data-delay="150"
+          className="shimmer-on-hover scroll-glow-visible p-8 md:p-12 rounded-3xl bg-gradient-to-br from-[#101820] via-white/[0.04] to-white/[0.01] border border-[#C6283D]/40 shadow-2xl relative overflow-hidden"
+        >
           <div className="absolute top-0 right-0 w-80 h-80 bg-[#C6283D]/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
@@ -61,10 +79,12 @@ export const AchievementsSection: React.FC = () => {
 
         {/* Secondary Achievements Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {ACHIEVEMENTS.filter(a => !a.highlight).map((ach) => (
+          {ACHIEVEMENTS.filter(a => !a.highlight).map((ach, idx) => (
             <div
               key={ach.id}
-              className="p-8 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-white/20 transition-all flex flex-col justify-between"
+              data-scroll={idx % 2 === 0 ? 'fade-left' : 'fade-right'}
+              data-delay={String(idx * 150 + 100)}
+              className="shimmer-on-hover relative overflow-hidden p-8 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-[#75C5DE]/30 transition-all flex flex-col justify-between"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between">

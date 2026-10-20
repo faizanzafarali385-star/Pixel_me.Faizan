@@ -34,19 +34,34 @@ export const SkillsSection: React.FC = () => {
   return (
     <section id="skills" className="w-full bg-[#101820] py-24 px-6 md:px-12 text-[#EAF2F6] border-t border-white/10">
       <div className="max-w-[1600px] mx-auto space-y-16">
+
         {/* Section Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-6 border-b border-white/10">
+        <div
+          data-scroll="line-draw"
+          className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-6 border-b border-white/10"
+        >
           <div>
-            <span className="text-xs font-semibold tracking-widest uppercase text-[#75C5DE] block mb-2">
+            <span
+              data-scroll="slide-reveal"
+              className="text-xs font-semibold tracking-widest uppercase text-[#75C5DE] block mb-2"
+            >
               02 · Technical Capabilities
             </span>
-            <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-white">
+            <h2
+              data-scroll="fade-up"
+              data-delay="100"
+              className="text-3xl md:text-5xl font-semibold tracking-tight text-white"
+            >
               Technical Skills &amp; Stack
             </h2>
           </div>
 
-          {/* Search & Category Filter */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Search */}
+          <div
+            data-scroll="fade-left"
+            data-delay="200"
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+          >
             <div className="relative">
               <Search className="w-4 h-4 text-[#647786] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
@@ -54,14 +69,18 @@ export const SkillsSection: React.FC = () => {
                 placeholder="Search skill (e.g. Three.js, React)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 text-xs rounded-full bg-white/5 border border-white/10 text-white placeholder:text-[#647786] focus:outline-none focus:border-[#75C5DE] w-full sm:w-64"
+                className="pl-10 pr-4 py-2 text-xs rounded-full bg-white/5 border border-white/10 text-white placeholder:text-[#647786] focus:outline-none focus:border-[#75C5DE] w-full sm:w-64 transition-colors"
               />
             </div>
           </div>
         </div>
 
         {/* Category Tabs */}
-        <div className="flex flex-wrap gap-2">
+        <div
+          data-scroll="fade-up"
+          data-delay="150"
+          className="flex flex-wrap gap-2"
+        >
           {categories.map((cat) => (
             <button
               key={cat}
@@ -79,16 +98,19 @@ export const SkillsSection: React.FC = () => {
 
         {/* Skills Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredGroups.map((group) => {
+          {filteredGroups.map((group, idx) => {
             const Icon = categoryIcons[group.category] || Code2;
+            const delays = [0, 100, 200, 100, 200, 300];
             return (
               <div
                 key={group.category}
-                className="p-7 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-white/20 transition-all duration-300 flex flex-col justify-between group hover:shadow-xl hover:bg-white/[0.05]"
+                data-scroll="fade-up"
+                data-delay={String(delays[idx % delays.length] + 100)}
+                className="relative shimmer-on-hover overflow-hidden p-7 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-[#75C5DE]/30 transition-all duration-300 flex flex-col justify-between group hover:shadow-xl hover:bg-white/[0.05]"
               >
                 <div>
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="w-10 h-10 rounded-xl bg-[#75C5DE]/10 text-[#75C5DE] flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <div className="w-10 h-10 rounded-xl bg-[#75C5DE]/10 text-[#75C5DE] flex items-center justify-center group-hover:scale-110 group-hover:bg-[#75C5DE]/20 transition-all duration-300">
                       <Icon className="w-5 h-5" />
                     </div>
                     <h3 className="text-lg font-semibold text-white tracking-tight">
@@ -96,12 +118,12 @@ export const SkillsSection: React.FC = () => {
                     </h3>
                   </div>
 
-                  {/* Skills Grid */}
                   <div className="flex flex-wrap gap-2">
-                    {group.skills.map((skill) => (
+                    {group.skills.map((skill, si) => (
                       <span
                         key={skill}
                         className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/5 text-xs text-[#EAF2F6]/90 font-medium group-hover:border-white/15 transition-colors"
+                        style={{ transitionDelay: `${si * 20}ms` }}
                       >
                         {skill}
                       </span>
@@ -118,8 +140,12 @@ export const SkillsSection: React.FC = () => {
           })}
         </div>
 
-        {/* Note from user */}
-        <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-xs text-[#647786] text-center max-w-2xl mx-auto">
+        {/* Note */}
+        <div
+          data-scroll="blur-in"
+          data-delay="200"
+          className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-xs text-[#647786] text-center max-w-2xl mx-auto"
+        >
           <strong>Note:</strong> Experience varies across technologies. I continuously improve my skills through practical projects, open hackathons, and experimentation.
         </div>
       </div>

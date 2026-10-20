@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useScrollReveal } from './hooks/useScrollReveal';
 import { SplashReveal } from './components/SplashReveal';
 import { Navigation } from './components/Navigation';
 import { HeroSection } from './components/HeroSection';
@@ -15,9 +16,19 @@ import PixelTrail from './components/PixelTrail';
 import { Project } from './types';
 
 export default function App() {
+  useScrollReveal();
   const [introKey, setIntroKey] = useState<number>(0);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [inquiryOpen, setInquiryOpen] = useState<boolean>(false);
+  const [isLanyardOpen, setIsLanyardOpen] = useState<boolean>(false);
+
+  const handleToggleLanyard = useCallback(() => {
+    setIsLanyardOpen((prev) => !prev);
+  }, []);
+
+  const handleCloseLanyard = useCallback(() => {
+    setIsLanyardOpen(false);
+  }, []);
 
   const handleReplayIntro = useCallback(() => {
     setIntroKey((prev) => prev + 1);
@@ -60,6 +71,8 @@ export default function App() {
       <Navigation
         onOpenInquiry={handleOpenInquiry}
         onReplayIntro={handleReplayIntro}
+        onToggleLanyard={handleToggleLanyard}
+        isLanyardOpen={isLanyardOpen}
       />
 
       {/* 3. Hero Section: Architectural Monolith, Dynamic Crystal Spotlight Mask & Staggered Reveal */}
@@ -67,6 +80,9 @@ export default function App() {
         onStartProject={handleOpenInquiry}
         onReplayIntro={handleReplayIntro}
         onExploreWork={handleExploreWork}
+        isLanyardOpen={isLanyardOpen}
+        onToggleLanyard={handleToggleLanyard}
+        onCloseLanyard={handleCloseLanyard}
       />
 
       {/* 4. About Me, Education (SGSU BCA AI/ML, SGPA 8.55), Philosophy & Strengths */}

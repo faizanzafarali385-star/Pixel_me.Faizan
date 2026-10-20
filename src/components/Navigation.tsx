@@ -6,9 +6,15 @@ import avatarImg from '../assets/avatar.jpeg';
 interface NavigationProps {
   onOpenInquiry: () => void;
   onReplayIntro?: () => void;
+  onToggleLanyard?: () => void;
+  isLanyardOpen?: boolean;
 }
 
-export const Navigation: React.FC<NavigationProps> = ({ onOpenInquiry }) => {
+export const Navigation: React.FC<NavigationProps> = ({
+  onOpenInquiry,
+  onToggleLanyard,
+  isLanyardOpen = false
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -55,16 +61,27 @@ export const Navigation: React.FC<NavigationProps> = ({ onOpenInquiry }) => {
       <header className="fixed top-6 md:top-8 left-0 w-1/2 z-40 flex items-center pointer-events-none">
         <div className="pl-5 md:pl-10 pointer-events-auto">
           <a
-            href="#"
-            className={`flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#75C5DE] rounded-2xl p-1.5 pr-3.5 transition-all duration-300 ${
-              scrolled
+            href="#hero"
+            className={`flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#75C5DE] rounded-2xl p-1.5 pr-3.5 transition-all duration-300 cursor-pointer ${
+              isLanyardOpen
+                ? 'bg-[#101820] border border-[#75C5DE]/60 shadow-[0_0_20px_rgba(117,197,222,0.35)] ring-1 ring-[#75C5DE]'
+                : scrolled
                 ? 'bg-[#101820]/85 backdrop-blur-md border border-white/10 shadow-xl'
                 : 'hover:bg-white/[0.04]'
             }`}
-            aria-label="Syed Faizan Ali Home"
+            aria-label="Syed Faizan Ali Home - Click to toggle 3D ID Badge"
+            title={isLanyardOpen ? "Click to close 3D ID Badge" : "Click to view 3D Interactive ID Badge"}
             onClick={(e) => {
               e.preventDefault();
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              if (onToggleLanyard) {
+                onToggleLanyard();
+              }
+              const heroEl = document.getElementById('hero');
+              if (heroEl) {
+                heroEl.scrollIntoView({ behavior: 'smooth' });
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
             }}
           >
             {/* Arctic Avatar Badge with Gradient Frame */}
