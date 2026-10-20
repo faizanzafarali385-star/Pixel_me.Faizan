@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowUpRight, Compass } from 'lucide-react';
 import { PERSONAL_INFO } from '../data/portfolioData';
+import avatarImg from '../assets/avatar.jpeg';
 
 interface NavigationProps {
   onOpenInquiry: () => void;
@@ -52,27 +53,41 @@ export const Navigation: React.FC<NavigationProps> = ({ onOpenInquiry }) => {
     <>
       {/* Floating Logo - Left side */}
       <header className="fixed top-6 md:top-8 left-0 w-1/2 z-40 flex items-center pointer-events-none">
-        <div className="pl-5 md:pl-10 pointer-events-auto mix-blend-difference">
+        <div className="pl-5 md:pl-10 pointer-events-auto">
           <a
             href="#"
-            className="flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#75C5DE] rounded-xl p-1.5"
+            className={`flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#75C5DE] rounded-2xl p-1.5 pr-3.5 transition-all duration-300 ${
+              scrolled
+                ? 'bg-[#101820]/85 backdrop-blur-md border border-white/10 shadow-xl'
+                : 'hover:bg-white/[0.04]'
+            }`}
             aria-label="Syed Faizan Ali Home"
             onClick={(e) => {
               e.preventDefault();
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           >
-            {/* Arctic Monogram */}
-            <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[#EAF2F6] via-[#75C5DE] to-[#C6283D] p-[1px] shadow-lg">
-              <div className="w-full h-full bg-[#101820] rounded-[11px] flex items-center justify-center font-bold text-xs tracking-tighter text-[#EAF2F6]">
-                SFA
+            {/* Arctic Avatar Badge with Gradient Frame */}
+            <div className="relative w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-[#EAF2F6] via-[#75C5DE] to-[#C6283D] p-[1.5px] shadow-lg transition-transform duration-300 group-hover:scale-105 shrink-0">
+              <div className="w-full h-full bg-[#101820] rounded-[10px] overflow-hidden">
+                <img
+                  src={avatarImg}
+                  alt={PERSONAL_INFO.name}
+                  className="w-full h-full object-cover object-[50%_18%] select-none pointer-events-none"
+                  loading="eager"
+                />
               </div>
+              {/* Active status pulse indicator */}
+              <span className="absolute -bottom-0.5 -right-0.5 flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#75C5DE] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#75C5DE] border-2 border-[#101820]"></span>
+              </span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[#EAF2F6] font-semibold text-sm tracking-tight leading-none">
+              <span className="text-[#EAF2F6] font-semibold text-sm tracking-tight leading-none group-hover:text-white transition-colors">
                 {PERSONAL_INFO.shortName}
               </span>
-              <span className="text-[10px] text-[#647786] tracking-wider uppercase font-medium mt-1">
+              <span className="text-[10px] text-[#75C5DE]/90 tracking-wider uppercase font-medium mt-1">
                 AI &amp; 3D Dev
               </span>
             </div>
