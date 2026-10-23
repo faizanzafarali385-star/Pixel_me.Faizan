@@ -611,7 +611,13 @@ const configureSimulation = (sim, layout, length) => {
 };
 
 const stepSimulation = (sim, dt, physics, time) => {
-  const steps = Math.max(1, Math.ceil(dt / MAX_STEP - 1e-6));
+  // Phase 9: cap sub-steps by tier to prevent the slow-frame death-spiral
+  // high: 16 (identical to original at 60fps, prevents 32 at 30fps)
+  // mid: 8, low: 6
+  const perfTier = document.documentElement.dataset.perf ?? 'high';
+  const stepCap = perfTier === 'low' ? 6 : perfTier === 'mid' ? 8 : 16;
+  const rawSteps = Math.max(1, Math.ceil(dt / MAX_STEP - 1e-6));
+  const steps = Math.min(rawSteps, stepCap);
   const h = dt / steps;
   const { nodes, previous, velocities, body } = sim;
   const windX = physics.breeze * (Math.sin(time * 0.53) * 0.7 + Math.sin(time * 1.31 + 1.7) * 0.3) * 3;
@@ -762,7 +768,11 @@ const Lanyard = ({
 
     let renderer;
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: 'default'  // Phase 9: don't force discrete GPU
+      });
     } catch {
       return undefined;
     }
@@ -1246,7 +1256,10 @@ const Lanyard = ({
     const resize = () => {
       view.width = Math.max(1, container.clientWidth);
       view.height = Math.max(1, container.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      // Phase 9: cap DPR on mid/low tier to reduce fill-rate cost
+      const perfTier = document.documentElement.dataset.perf ?? 'high';
+      const dprCap = (perfTier === 'mid' || perfTier === 'low') ? 1.25 : 2;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
       renderer.setSize(view.width, view.height, false);
       apply();
       render();

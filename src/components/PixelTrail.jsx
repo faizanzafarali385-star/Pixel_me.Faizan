@@ -293,7 +293,7 @@ export default function PixelTrail({
       alpha: true,
       premultipliedAlpha: true,
       antialias: false,
-      powerPreference: 'high-performance'
+      powerPreference: 'default'  // Phase 3: don't force discrete GPU on dual-GPU laptops
     });
     if (!gl) return undefined;
     const vertex = compile(gl, gl.VERTEX_SHADER, VERTEX);
@@ -444,9 +444,10 @@ export default function PixelTrail({
         ageCtx.fillStyle = 'black';
         ageCtx.fillRect(0, 0, AGE_SIZE, AGE_SIZE);
       }
-      state.points.forEach((point, i) => {
+      // Phase 3: use filter instead of forEach+splice to avoid skipping elements
+      state.points = state.points.filter(point => {
         point.age += delta * 1000;
-        if (point.age > s.maxAge) state.points.splice(i, 1);
+        return point.age <= s.maxAge;
       });
       if (!state.points.length) state.force = 0;
       if (s.flow > 0 || s.gravity !== 0) {
@@ -576,6 +577,8 @@ export default function PixelTrail({
     const frame = now => {
       state.raf = 0;
       if (!state.alive) return;
+      // Phase 3: pause when tab hidden
+      if (document.hidden) { state.last = 0; return; }
       const delta = state.last ? (now - state.last) / 1000 : 1 / 60;
       state.last = now;
       state.time += delta;

@@ -36,7 +36,7 @@ export const EDUCATION: EducationInfo = {
   location: 'Bhopal, Madhya Pradesh, India',
   duration: '2025 – Present',
   status: 'Second Year, Third Semester',
-  sgpa: '8.70',
+  sgpa: '8.7',
   areas: [
     'Programming Fundamentals',
     'Python and C++',
@@ -104,8 +104,8 @@ export const FEATURED_PROJECTS: Project[] = [
       { label: 'Access Speed', value: '<200ms API' }
     ],
     accentColor: '#75C5DE',
-    baseImage: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=1400&q=80',
-    secondaryImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1400&q=80',
+    baseImage: '/SmartUni.AI Digital University Logo.png',
+    secondaryImage: '/Smartuni2.png',
     secondaryTag: 'Unified Smart Dashboard'
   },
   {
@@ -137,8 +137,8 @@ export const FEATURED_PROJECTS: Project[] = [
       { label: 'Community Feed', value: 'Hyperlocal' }
     ],
     accentColor: '#C6283D',
-    baseImage: 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1400&q=80',
-    secondaryImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1400&q=80',
+    baseImage: '/GullyMart Local Shops Logo Banner.png',
+    secondaryImage: '/Gullymart2.png',
     secondaryTag: '3D Spatial Discovery'
   },
   {
@@ -163,8 +163,8 @@ export const FEATURED_PROJECTS: Project[] = [
       { label: 'Team Effort', value: 'SGSU Innovate' }
     ],
     accentColor: '#38BDF8',
-    baseImage: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1400&q=80',
-    secondaryImage: 'https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=1400&q=80',
+    baseImage: '/sgsubot1.png',
+    secondaryImage: '/sgsubot2.png',
     secondaryTag: 'Conversational NLP Engine'
   },
   {
@@ -189,8 +189,8 @@ export const FEATURED_PROJECTS: Project[] = [
       { label: 'Execution', value: 'Zero Overhead' }
     ],
     accentColor: '#A78BFA',
-    baseImage: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1400&q=80',
-    secondaryImage: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1400&q=80',
+    baseImage: '/EduTrack Education Progress Logo.png',
+    secondaryImage: '/Edutrack2.png',
     secondaryTag: 'C++ Algorithmic Core'
   }
 ];
@@ -223,7 +223,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     event: 'SGSU Innovation Initiatives',
     theme: 'Smart Campus & Civic Technologies',
     award: 'Active Innovator',
-    date: '2024 – 2026',
+    date: '2025 – 2026',
     highlight: false,
     description: 'Active participant in campus hackathons, open workshops, and developer meetups spanning artificial intelligence, full-stack web, and interactive 3D computing.'
   }

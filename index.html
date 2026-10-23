@@ -9,13 +9,21 @@
     <meta property="og:description" content="Building Ideas Into Intelligent Experiences. AI &amp; ML, 3D Web, Hackathon Winner." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Phase 8: Flash prevention — body starts dark before React paints -->
+    <meta name="theme-color" content="#101820" />
+    <style>html,body{background:#101820;color:#EAF2F6}</style>
+
+    <!-- Phase 8: Self-hosted Inter variable font (replaces render-blocking Google Fonts link).
+         Inter Variable covers weights 100–900 in one file. Plus Jakarta Sans and Playfair Display
+         were unused in the codebase and have been removed entirely. Inter 300 was also unused. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;1,400&display=swap" rel="stylesheet" />
+    <!-- Only load Inter (weights 400–700) — the only font actually used in src/ -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   </head>
-  <body class="bg-[#E4E4E4] text-[#111111] antialiased selection:bg-[#75C5DE] selection:text-black">
+  <body class="bg-[#101820] text-[#EAF2F6] antialiased selection:bg-[#75C5DE] selection:text-black">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

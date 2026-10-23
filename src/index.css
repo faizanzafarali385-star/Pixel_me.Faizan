@@ -241,8 +241,22 @@
   50% { opacity: 0.6; transform: scale(1.04); }
 }
 
+/* Phase 6: pause iceGlow when not in view (toggled by scroll observer) */
 .ambient-ice-glow {
   animation: iceGlow 8s ease-in-out infinite;
+  animation-play-state: paused;
+}
+[data-inview="true"] .ambient-ice-glow,
+.ambient-ice-glow[data-inview="true"] {
+  animation-play-state: running;
+}
+
+/* Phase 6: pause scrollFloat when not in view */
+[data-scroll="float"][data-visible="true"] {
+  animation-play-state: running;
+}
+[data-scroll="float"]:not([data-inview="true"]) {
+  animation-play-state: paused;
 }
 
 /* =====================================================
@@ -253,7 +267,7 @@
 
 /* --- BASE: all scroll-animated elements start hidden --- */
 [data-scroll] {
-  will-change: transform, opacity, filter;
+  /* Phase 6: removed permanent will-change — transitions auto-promote during animation */
 }
 
 /* ── 1. Fade Up (default) ── */
@@ -370,12 +384,23 @@
 }
 
 /* ── 9. Glow border pulse (used on featured cards) ── */
-@keyframes borderPulse {
-  0%, 100% { box-shadow: 0 0 0px 0px rgba(117,197,222,0); }
-  50%       { box-shadow: 0 0 20px 2px rgba(117,197,222,0.18); }
-}
+/* Phase 6: replaced box-shadow animation with opacity-only on pseudo-element (compositor-only, no repaint) */
 .scroll-glow-visible {
-  animation: borderPulse 3.5s ease-in-out infinite;
+  position: relative;
+}
+.scroll-glow-visible::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: 0 0 20px 2px rgba(117,197,222,0.18);
+  opacity: 0;
+  pointer-events: none;
+  animation: borderPulseOpacity 3.5s ease-in-out infinite;
+}
+@keyframes borderPulseOpacity {
+  0%, 100% { opacity: 0; }
+  50%       { opacity: 1; }
 }
 
 /* ── Stagger delay helpers ── */
@@ -455,3 +480,30 @@
   }
   .shimmer-on-hover::before { display: none; }
 }
+
+/* =====================================================
+   PHASE 6: LOW-TIER FALLBACKS (behind ENABLE_LOW_TIER_FALLBACKS)
+   Only applied when data-perf="low" is set on <html>.
+   ===================================================== */
+html[data-perf="low"] [data-scroll="blur-in"] {
+  /* swap filter:blur for opacity+translate only — no GPU rasterisation of blur */
+  filter: none !important;
+}
+html[data-perf="low"] [data-scroll="blur-in"][data-visible="true"] {
+  filter: none !important;
+}
+
+html[data-perf="low"] .word-reveal-token {
+  /* Phase 6: skip blur on word reveals on low tier */
+  animation-name: wordRevealAnimNoBlur;
+}
+@keyframes wordRevealAnimNoBlur {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Phase 6: contain for canvas sections to reduce paint regions */
+#about, #skills, #projects, #achievements, #experience {
+  contain: layout paint;
+}
+

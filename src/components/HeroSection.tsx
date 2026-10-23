@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { ArrowUpRight, Sparkles, SlidersHorizontal, RotateCcw, Eye, Award, Terminal, X, BadgeCheck } from 'lucide-react';
 import { PERSONAL_INFO } from '../data/portfolioData';
-import Lanyard from './Lanyard';
+
+// ─── Phase 5: Lazy-load Lanyard + Suspense ───────────────────────────────────
+const Lanyard = React.lazy(() => import('./Lanyard'));
 
 interface HeroSectionProps {
   onStartProject: () => void;
@@ -13,6 +15,10 @@ interface HeroSectionProps {
 }
 
 type RevealMode = 'spotlight' | 'split' | 'vibrant' | 'base';
+
+// ─── Phase 2: CSS gradient stops matching the original radial gradient ────────
+const SPOT_STOPS =
+  'rgba(0,0,0,1) 0%, rgba(0,0,0,1) 35%, rgba(0,0,0,.78) 65%, rgba(0,0,0,.35) 82%, rgba(0,0,0,.1) 94%, rgba(0,0,0,0) 100%';
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
   onStartProject,
@@ -30,13 +36,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const [showControls, setShowControls] = useState<boolean>(false);
   const [imageError, setImageError] = useState<boolean>(false);
 
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const revealImgRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLElement | null>(null);
 
+  // Refs for the CSS-mask spotlight (Phase 2) — no canvas, no toDataURL
   const mouseRef = useRef({ x: -999, y: -999 });
   const smoothRef = useRef({ x: -999, y: -999 });
 
+  // ─── Phase 2: default-position timer ─────────────────────────────────────
   useEffect(() => {
     const timer = setTimeout(() => {
       if (typeof window !== 'undefined' && mouseRef.current.x === -999) {
@@ -44,109 +51,158 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           x: window.innerWidth * 0.65,
           y: window.innerHeight * 0.45
         };
+        // smoothRef starts at the same position so there's no animated jump
         smoothRef.current = { ...mouseRef.current };
+        kickSpotlight();
       }
     }, 1200);
     return () => clearTimeout(timer);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const updateMask = useCallback(() => {
-    const canvas = canvasRef.current;
-    const imgLayer = revealImgRef.current;
-    if (!canvas || !imgLayer) return;
-
-    if (revealMode === 'spotlight') {
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      smoothRef.current.x += (mouseRef.current.x - smoothRef.current.x) * 0.12;
-      smoothRef.current.y += (mouseRef.current.y - smoothRef.current.y) * 0.12;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      const radius = spotlightRadius;
-      const grad = ctx.createRadialGradient(
-        smoothRef.current.x,
-        smoothRef.current.y,
-        0,
-        smoothRef.current.x,
-        smoothRef.current.y,
-        radius
-      );
-
-      grad.addColorStop(0, 'rgba(255,255,255,1)');
-      grad.addColorStop(0.35, 'rgba(255,255,255,1)');
-      grad.addColorStop(0.65, 'rgba(255,255,255,0.78)');
-      grad.addColorStop(0.82, 'rgba(255,255,255,0.35)');
-      grad.addColorStop(0.94, 'rgba(255,255,255,0.1)');
-      grad.addColorStop(1, 'rgba(255,255,255,0)');
-
-      ctx.beginPath();
-      ctx.arc(smoothRef.current.x, smoothRef.current.y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      const dataUrl = canvas.toDataURL();
-      imgLayer.style.webkitMaskImage = `url(${dataUrl})`;
-      imgLayer.style.maskImage = `url(${dataUrl})`;
-      imgLayer.style.webkitMaskSize = '100% 100%';
-      imgLayer.style.maskSize = '100% 100%';
-      imgLayer.style.opacity = '1';
-    } else if (revealMode === 'split') {
-      imgLayer.style.webkitMaskImage = `linear-gradient(to right, transparent ${splitPosition}%, black ${splitPosition}%)`;
-      imgLayer.style.maskImage = `linear-gradient(to right, transparent ${splitPosition}%, black ${splitPosition}%)`;
-      imgLayer.style.webkitMaskSize = '100% 100%';
-      imgLayer.style.maskSize = '100% 100%';
-      imgLayer.style.opacity = '1';
-    } else if (revealMode === 'vibrant') {
-      imgLayer.style.webkitMaskImage = 'none';
-      imgLayer.style.maskImage = 'none';
-      imgLayer.style.opacity = '1';
-    } else if (revealMode === 'base') {
-      imgLayer.style.opacity = '0';
-    }
-  }, [revealMode, spotlightRadius, splitPosition]);
-
+  // ─── Phase 2: CSS-mask spotlight — replaces canvas.toDataURL loop ─────────
   useEffect(() => {
-    let animId: number;
+    if (revealMode !== 'spotlight') return;
 
-    const resize = () => {
-      if (canvasRef.current) {
-        canvasRef.current.width = window.innerWidth;
-        canvasRef.current.height = window.innerHeight;
+    const layer = revealImgRef.current;
+    if (!layer) return;
+
+    // Apply the CSS radial-gradient mask once; --sx/--sy/--r update via custom props
+    const mask = `radial-gradient(circle var(--r,${spotlightRadius}px) at var(--sx,-999px) var(--sy,-999px), ${SPOT_STOPS})`;
+    layer.style.maskImage = mask;
+    layer.style.webkitMaskImage = mask;
+    layer.style.maskSize = '100% 100%';
+    layer.style.webkitMaskSize = '100% 100%';
+    layer.style.opacity = '1';
+    layer.style.setProperty('--r', `${spotlightRadius}px`);
+
+    const m = mouseRef.current;
+    const s = smoothRef.current;
+    let raf = 0;
+    let inView = true;
+
+    // rAF tick — runs only while the pointer is moving; goes idle when converged
+    const tick = () => {
+      raf = 0;
+      const dx = m.x - s.x;
+      const dy = m.y - s.y;
+      s.x += dx * 0.12;
+      s.y += dy * 0.12;
+      layer.style.setProperty('--sx', `${s.x.toFixed(1)}px`);
+      layer.style.setProperty('--sy', `${s.y.toFixed(1)}px`);
+      // Keep running only while not yet converged
+      if (Math.abs(dx) > 0.25 || Math.abs(dy) > 0.25) {
+        raf = requestAnimationFrame(tick);
       }
     };
-    resize();
-    window.addEventListener('resize', resize);
+
+    // Kick a single rAF chain when the pointer moves (or on first position)
+    const kick = () => {
+      if (!raf && inView && !document.hidden) raf = requestAnimationFrame(tick);
+    };
+    // Expose kick so the default-position timer and event handlers can call it
+    kickSpotlightRef.current = kick;
 
     const handleMouseMove = (e: MouseEvent) => {
-      mouseRef.current.x = e.clientX;
-      mouseRef.current.y = e.clientY;
+      m.x = e.clientX;
+      m.y = e.clientY;
+      kick();
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length > 0) {
-        mouseRef.current.x = e.touches[0].clientX;
-        mouseRef.current.y = e.touches[0].clientY;
+        m.x = e.touches[0].clientX;
+        m.y = e.touches[0].clientY;
+        kick();
       }
     };
 
+    // Visibility: cancel rAF when tab hidden, restart on return
+    const handleVisibility = () => {
+      if (document.hidden) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      } else {
+        kick();
+      }
+    };
+
+    // IntersectionObserver: pause when hero scrolled off-screen
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.isIntersecting;
+        if (!inView) {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        } else {
+          kick();
+        }
+      },
+      { threshold: 0 }
+    );
+    if (containerRef.current) io.observe(containerRef.current);
+
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    document.addEventListener('visibilitychange', handleVisibility);
 
-    const renderLoop = () => {
-      updateMask();
-      animId = requestAnimationFrame(renderLoop);
-    };
-    renderLoop();
+    // If default position was already set before this effect ran, kick immediately
+    if (m.x !== -999) kick();
 
     return () => {
-      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(raf);
+      raf = 0;
+      kickSpotlightRef.current = null;
+      io.disconnect();
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMove);
-      cancelAnimationFrame(animId);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      // Clear the mask when leaving spotlight mode
+      layer.style.maskImage = '';
+      layer.style.webkitMaskImage = '';
     };
-  }, [updateMask]);
+  }, [revealMode, spotlightRadius]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Update --r custom property when spotlightRadius slider changes (no remount needed)
+  useEffect(() => {
+    if (revealMode === 'spotlight') {
+      revealImgRef.current?.style.setProperty('--r', `${spotlightRadius}px`);
+    }
+  }, [spotlightRadius, revealMode]);
+
+  // ─── Non-spotlight modes (split, vibrant, base) ───────────────────────────
+  const updateNonSpotlightMask = useCallback(() => {
+    const imgLayer = revealImgRef.current;
+    if (!imgLayer) return;
+    if (revealMode === 'split') {
+      imgLayer.style.maskImage = `linear-gradient(to right, transparent ${splitPosition}%, black ${splitPosition}%)`;
+      imgLayer.style.webkitMaskImage = `linear-gradient(to right, transparent ${splitPosition}%, black ${splitPosition}%)`;
+      imgLayer.style.maskSize = '100% 100%';
+      imgLayer.style.webkitMaskSize = '100% 100%';
+      imgLayer.style.opacity = '1';
+    } else if (revealMode === 'vibrant') {
+      imgLayer.style.maskImage = 'none';
+      imgLayer.style.webkitMaskImage = 'none';
+      imgLayer.style.opacity = '1';
+    } else if (revealMode === 'base') {
+      imgLayer.style.opacity = '0';
+    }
+  }, [revealMode, splitPosition]);
+
+  useEffect(() => {
+    if (revealMode !== 'spotlight') updateNonSpotlightMask();
+  }, [revealMode, splitPosition, updateNonSpotlightMask]);
+
+  // ─── Stable ref for kick (used by default-position timer) ─────────────────
+  const kickSpotlightRef = useRef<(() => void) | null>(null);
+  const kickSpotlight = useCallback(() => {
+    kickSpotlightRef.current?.();
+  }, []);
+
+  // ─── Phase 5: Lanyard preload on hover/focus ───────────────────────────────
+  const preloadLanyard = useCallback(() => {
+    // Dynamic import triggers the module load; the Suspense boundary handles rendering
+    import('./Lanyard').catch(() => {/* ignore */});
+  }, []);
 
   return (
     <section
@@ -176,6 +232,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           className="hidden"
           referrerPolicy="no-referrer"
           onError={() => setImageError(true)}
+          decoding="async"
         />
 
         {imageError && (
@@ -190,13 +247,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         )}
       </div>
 
-      {/* 3. REVEAL LAYER & SPOTLIGHT CANVAS (Vibrant 3D Tech / Neural Atmosphere) */}
-      <canvas
-        ref={canvasRef}
-        className="hidden"
-        aria-hidden="true"
-      />
-
+      {/* 3. REVEAL LAYER — now uses CSS mask, no canvas/toDataURL */}
       <div
         ref={revealImgRef}
         className="absolute top-[28vh] md:top-0 left-0 right-0 bottom-0 bg-cover bg-no-repeat bg-[60%_center] md:bg-center z-7 pointer-events-none transition-opacity duration-300"
@@ -239,28 +290,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </button>
           </div>
 
-          {/* Full-page Lanyard canvas */}
+          {/* Full-page Lanyard canvas — lazily loaded */}
           <div style={{ width: '100%', height: '100%' }} className="pointer-events-auto">
-            <Lanyard
-              frontImage="/lanyard-card-front.png"
-              backImage="/lanyard-card-back.png"
-              strapImage="/lanyard-strap.png"
-              imageFit="contain"
-              cardColor="#000000"
-              finish="metallic"
-              anchor="right"
-              strapColor="#116194"
-              metal="gold"
-              size={0.61}
-              strapLength={0.48}
-              strapWidth={0.7}
-              gravity={0.9}
-              damping={0.45}
-              elasticity={0.6}
-              breeze={0.35}
-              interactive={true}
-              intro={true}
-            />
+            <React.Suspense fallback={null}>
+              <Lanyard
+                frontImage="/lanyard-card-front.png"
+                backImage="/lanyard-card-back.png"
+                imageFit="contain"
+                cardColor="#000000"
+                finish="metallic"
+                anchor="right"
+                strapColor="#116194"
+                metal="gold"
+                size={0.61}
+                strapLength={0.48}
+                strapWidth={0.7}
+                gravity={0.9}
+                damping={0.45}
+                elasticity={0.6}
+                breeze={0.35}
+                interactive={true}
+                intro={true}
+              />
+            </React.Suspense>
           </div>
 
           {/* Bottom hint */}
@@ -284,8 +336,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               <span className="text-[#EAF2F6]">SGSU Bhopal</span>
             </div>
 
+            {/* Phase 5: preload Lanyard on hover/focus */}
             <button
               onClick={onToggleLanyard}
+              onPointerEnter={preloadLanyard}
+              onFocus={preloadLanyard}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-all cursor-pointer shadow-sm border ${
                 isLanyardOpen
                   ? 'bg-[#75C5DE] text-[#101820] border-[#75C5DE] font-semibold'
@@ -301,7 +356,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           {/* Headline with word-by-word reveal */}
           <h1
             className="text-3xl md:text-[38px] font-semibold leading-[1.18] tracking-[-0.03em] text-[#EAF2F6]"
-            style={{ textWrap: 'balance' }}
+            style={{ textWrap: 'balance' } as React.CSSProperties}
           >
             {headlineWords.map((word, idx) => (
               <span
@@ -326,7 +381,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               First Prize BGI Viksit Bharat 2047
             </span>
             <span aria-hidden="true">·</span>
-            <span>SGPA 8.55</span>
+            <span>SGPA 8.7</span>
             <span aria-hidden="true">·</span>
             <span>Quick Heal Cyber Warrior</span>
           </div>

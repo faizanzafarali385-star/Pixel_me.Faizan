@@ -25,8 +25,8 @@ const useInView = (threshold = 0.15) => {
 };
 
 /* ─── animated counter ──────────────────────────────────────────────────── */
-const Counter: React.FC<{ to: number; suffix?: string; duration?: number }> = ({
-  to, suffix = '', duration = 1600
+const Counter: React.FC<{ to: number; suffix?: string; duration?: number; decimals?: number }> = ({
+  to, suffix = '', duration = 1600, decimals = to % 1 !== 0 ? 1 : 0
 }) => {
   const [val, setVal] = useState(0);
   const { ref, visible } = useInView(0.3);
@@ -37,19 +37,20 @@ const Counter: React.FC<{ to: number; suffix?: string; duration?: number }> = ({
       if (!start) start = ts;
       const progress = Math.min((ts - start) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setVal(Math.round(eased * to));
+      setVal(eased * to);
       if (progress < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   }, [visible, to, duration]);
   return (
     <span ref={ref as React.RefObject<HTMLSpanElement>}>
-      {val}{suffix}
+      {decimals > 0 ? val.toFixed(decimals) : Math.round(val)}{suffix}
     </span>
   );
 };
 
 /* ─── neural / dot-grid canvas background ───────────────────────────────── */
+/* Phase 4: on-screen + visibility gating, squared-dist shortcut, batched strokes, single fill path */
 const NeuralCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -59,12 +60,22 @@ const NeuralCanvas: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Phase 4: tier-aware node count
+    const isLow = document.documentElement.dataset.perf === 'low';
+    const NODES = isLow ? 36 : 60;
+    const DIST_SQ = 120 * 120; // Phase 4: avoid sqrt for culled pairs
+
     let raf = 0;
     let alive = true;
+    let inView = false;
+    let tabVisible = !document.hidden;
 
-    const NODES = 60;
-    type Node = { x: number; y: number; vx: number; vy: number; r: number };
-    let nodes: Node[] = [];
+    type NodeT = { x: number; y: number; vx: number; vy: number; r: number };
+    let nodes: NodeT[] = [];
+
+    // Phase 4: low-tier 30fps cap
+    let lastTime = 0;
+    const FPS_CAP = isLow ? 1000 / 30 : 0;
 
     const init = () => {
       canvas.width = canvas.offsetWidth;
@@ -78,49 +89,97 @@ const NeuralCanvas: React.FC = () => {
       }));
     };
 
-    const draw = () => {
-      if (!alive) return;
+    const draw = (now: number) => {
+      raf = 0;
+      if (!alive || !inView || !tabVisible) return;
+
+      // Phase 4: fps throttle for low tier
+      if (FPS_CAP > 0 && now - lastTime < FPS_CAP) {
+        raf = requestAnimationFrame(draw);
+        return;
+      }
+      lastTime = now;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // move nodes
-      nodes.forEach(n => {
+      for (const n of nodes) {
         n.x += n.vx;
         n.y += n.vy;
         if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
         if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
-      });
+      }
 
-      // draw connections
+      // Phase 4: batch connections into 4 alpha buckets (1 stroke() per bucket)
+      // buckets indexed 0..3: alpha ranges 0–25%, 25–50%, 50–75%, 75–100% of max
+      const BUCKETS = 4;
+      const paths: Path2D[] = Array.from({ length: BUCKETS }, () => new Path2D());
+
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
           const dx = nodes[i].x - nodes[j].x;
           const dy = nodes[i].y - nodes[j].y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < 120) {
-            const alpha = (1 - dist / 120) * 0.18;
-            ctx.beginPath();
-            ctx.strokeStyle = `rgba(117,197,222,${alpha})`;
-            ctx.lineWidth = 0.8;
-            ctx.moveTo(nodes[i].x, nodes[i].y);
-            ctx.lineTo(nodes[j].x, nodes[j].y);
-            ctx.stroke();
+          const dSq = dx * dx + dy * dy;
+          if (dSq < DIST_SQ) {
+            const dist = Math.sqrt(dSq); // sqrt only for connecting pairs
+            const t = 1 - dist / 120;    // 0..1, higher = closer
+            const bucket = Math.min(BUCKETS - 1, Math.floor(t * BUCKETS));
+            paths[bucket].moveTo(nodes[i].x, nodes[i].y);
+            paths[bucket].lineTo(nodes[j].x, nodes[j].y);
           }
         }
       }
 
-      // draw nodes
-      nodes.forEach(n => {
-        ctx.beginPath();
+      ctx.lineWidth = 0.8;
+      for (let b = 0; b < BUCKETS; b++) {
+        // alpha proportional to bucket: 0.045, 0.09, 0.135, 0.18
+        const alpha = (0.18 / BUCKETS) * (b + 1);
+        ctx.strokeStyle = `rgba(117,197,222,${alpha.toFixed(3)})`;
+        ctx.stroke(paths[b]);
+      }
+
+      // Phase 4: all node dots in ONE path + ONE fill()
+      ctx.beginPath();
+      for (const n of nodes) {
+        ctx.moveTo(n.x + n.r, n.y);
         ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(117,197,222,0.45)';
-        ctx.fill();
-      });
+      }
+      ctx.fillStyle = 'rgba(117,197,222,0.45)';
+      ctx.fill();
 
       raf = requestAnimationFrame(draw);
     };
 
+    const wake = () => {
+      if (!raf && alive && inView && tabVisible) raf = requestAnimationFrame(draw);
+    };
+
     init();
-    draw();
+
+    // Phase 4: IntersectionObserver — pause when scrolled off-screen
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.isIntersecting;
+        if (inView) wake();
+        else {
+          cancelAnimationFrame(raf);
+          raf = 0;
+        }
+      },
+      { threshold: 0 }
+    );
+    io.observe(canvas);
+
+    // Phase 4: visibilitychange — pause in background tabs
+    const handleVisibility = () => {
+      tabVisible = !document.hidden;
+      if (tabVisible) wake();
+      else {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
 
     const ro = new ResizeObserver(init);
     ro.observe(canvas);
@@ -129,6 +188,8 @@ const NeuralCanvas: React.FC = () => {
       alive = false;
       cancelAnimationFrame(raf);
       ro.disconnect();
+      io.disconnect();
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
 
@@ -142,8 +203,8 @@ const NeuralCanvas: React.FC = () => {
 };
 
 /* ─── stat card ─────────────────────────────────────────────────────────── */
-interface StatProps { icon: React.ReactNode; value: number; suffix: string; label: string; color: string }
-const StatCard: React.FC<StatProps> = ({ icon, value, suffix, label, color }) => (
+interface StatProps { icon: React.ReactNode; value: number; suffix: string; label: string; color: string; decimals?: number }
+const StatCard: React.FC<StatProps> = ({ icon, value, suffix, label, color, decimals }) => (
   <div className={`
     group relative flex flex-col items-center justify-center text-center p-6 rounded-2xl
     bg-white/[0.035] border border-white/10 shadow-lg
@@ -157,7 +218,7 @@ const StatCard: React.FC<StatProps> = ({ icon, value, suffix, label, color }) =>
       {icon}
     </div>
     <div className="text-2xl md:text-3xl font-bold font-mono text-white tabular-nums tracking-tight">
-      <Counter to={value} suffix={suffix} />
+      <Counter to={value} suffix={suffix} decimals={decimals} />
     </div>
     <div className="text-[11px] text-[#647786] uppercase tracking-wider mt-1">{label}</div>
   </div>
@@ -209,7 +270,7 @@ export const AboutSection: React.FC = () => {
 
   const stats: StatProps[] = [
     { icon: <Trophy className="w-5 h-5" />, value: 1,   suffix: 'st', label: 'Hackathon Prize',   color: '#C6283D' },
-    { icon: <Star    className="w-5 h-5" />, value: 870, suffix: '',   label: 'SGPA × 100',        color: '#75C5DE' },
+    { icon: <Star    className="w-5 h-5" />, value: parseFloat(EDUCATION.sgpa) || 8.7, suffix: '',   label: 'SGPA', color: '#75C5DE', decimals: 1 },
     { icon: <Code2   className="w-5 h-5" />, value: 4,   suffix: '+',  label: 'Live Projects',     color: '#C6283D' },
     { icon: <Cpu     className="w-5 h-5" />, value: 7,   suffix: '+',  label: 'Certifications',    color: '#75C5DE' },
   ];
