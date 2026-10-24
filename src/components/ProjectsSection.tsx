@@ -3,6 +3,7 @@ import { ArrowUpRight, Sparkles } from 'lucide-react';
 import { FEATURED_PROJECTS } from '../data/portfolioData';
 import { Project } from '../types';
 import { PixelTransition } from './PixelTransition';
+import { ProjectImage } from './ProjectImage';
 
 interface ProjectsSectionProps {
   onSelectProject: (project: Project) => void;
@@ -78,26 +79,26 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onSelectProjec
               <div className="relative w-full h-[240px] md:h-[280px] rounded-2xl overflow-hidden mb-6 bg-[#18232C]">
                 <PixelTransition
                   firstContent={
-                    <div className="relative w-full h-full">
-                      <img
-                        src={project.baseImage}
-                        alt={project.title}
-                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                        referrerPolicy="no-referrer"
-                        loading="lazy"
-                      />
+                    <ProjectImage
+                      src={project.baseImage}
+                      alt={project.title}
+                      accentColor={project.accentColor}
+                      className="w-full h-full"
+                      imageClassName="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                      loading="lazy"
+                    >
                       <div className="absolute inset-0 bg-gradient-to-t from-[#101820]/90 via-transparent to-transparent opacity-80 pointer-events-none" />
-                    </div>
+                    </ProjectImage>
                   }
                   secondContent={
-                    <div className="relative w-full h-full">
-                      <img
-                        src={project.secondaryImage || project.baseImage}
-                        alt={`${project.title} - Preview`}
-                        className="w-full h-full object-cover"
-                        referrerPolicy="no-referrer"
-                        loading="lazy"
-                      />
+                    <ProjectImage
+                      src={project.secondaryImage || project.baseImage}
+                      alt={`${project.title} - Preview`}
+                      accentColor={project.accentColor}
+                      className="w-full h-full"
+                      imageClassName="w-full h-full object-cover"
+                      loading="lazy"
+                    >
                       <div className="absolute inset-0 bg-gradient-to-t from-[#101820]/95 via-transparent to-transparent opacity-90 pointer-events-none" />
                       {project.secondaryTag && (
                         <div className="absolute bottom-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/80 backdrop-blur-md border border-white/15 text-[11px] font-mono text-[#75C5DE]">
@@ -105,7 +106,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({ onSelectProjec
                           {project.secondaryTag}
                         </div>
                       )}
-                    </div>
+                    </ProjectImage>
                   }
                   gridSize={12}
                   pixelColor={project.accentColor || '#ffffff'}

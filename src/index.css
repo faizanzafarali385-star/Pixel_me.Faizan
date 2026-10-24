@@ -448,6 +448,35 @@
   animation: numFlash 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+/* ===== PROJECT IMAGE SKELETON & CYBER SHIMMER ===== */
+@keyframes cyberScan {
+  0% { transform: translateY(-100%); opacity: 0; }
+  50% { opacity: 0.8; }
+  100% { transform: translateY(320px); opacity: 0; }
+}
+
+@keyframes cyberShimmer {
+  0% { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(100%) skewX(-15deg); }
+}
+
+@keyframes cyberPulseRing {
+  0%, 100% { transform: scale(0.92); opacity: 0.4; }
+  50% { transform: scale(1.15); opacity: 0.85; }
+}
+
+.animate-cyber-shimmer {
+  animation: cyberShimmer 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-cyber-scan {
+  animation: cyberScan 3s ease-in-out infinite;
+}
+
+.animate-cyber-pulse-ring {
+  animation: cyberPulseRing 2.4s ease-in-out infinite;
+}
+
 /* =====================================================
    ACCESSIBILITY & PREFERS-REDUCED-MOTION
    ===================================================== */
@@ -479,6 +508,9 @@
     animation: none !important;
   }
   .shimmer-on-hover::before { display: none; }
+  .animate-cyber-shimmer, .animate-cyber-scan, .animate-cyber-pulse-ring {
+    animation: none !important;
+  }
 }
 
 /* =====================================================

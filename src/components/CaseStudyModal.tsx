@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { X, ArrowUpRight, CheckCircle2, Target, Layers, Users, Coins } from 'lucide-react';
 import { Project } from '../types';
+import { ProjectImage } from './ProjectImage';
 
 interface CaseStudyModalProps {
   project: Project | null;
@@ -80,24 +81,20 @@ export const CaseStudyModal: React.FC<CaseStudyModalProps> = ({ project, onClose
 
         {/* Visual Hero Media */}
         <div className="relative w-full h-[240px] md:h-[380px] rounded-2xl overflow-hidden mb-8 bg-[#18232C] border border-white/10">
-          <img
+          <ProjectImage
             src={project.baseImage}
             alt={project.title}
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-              const parent = e.currentTarget.parentElement;
-              if (parent) {
-                parent.classList.add('bg-gradient-to-br', 'from-[#101820]', 'via-[#18232C]', 'to-[#0a0f14]');
-              }
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#101820] via-transparent to-transparent pointer-events-none" />
-          <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs text-white/80">
-            <span>Syed Faizan Ali · Project Architecture</span>
-            <span className="font-mono text-[#75C5DE]">{project.title}</span>
-          </div>
+            accentColor={project.accentColor}
+            className="w-full h-full"
+            imageClassName="w-full h-full object-cover"
+            loading="eager"
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-[#101820] via-transparent to-transparent pointer-events-none" />
+            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs text-white/80 z-10 pointer-events-none">
+              <span>Syed Faizan Ali · Project Architecture</span>
+              <span className="font-mono text-[#75C5DE]">{project.title}</span>
+            </div>
+          </ProjectImage>
         </div>
 
         {/* Project Goal & Narrative */}
